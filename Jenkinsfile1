@@ -1,0 +1,46 @@
+pipeline
+{
+    agent any
+    tools
+    {
+        maven 'maven3'
+    }
+    
+    
+    stages
+    {
+        stage('SCM')
+        {
+           steps
+           {
+               git credentialsId: 'github', url: 'https://github.com/jayachandrababui/online-shop.git' 
+           }
+        }
+        stage('Maven Build')
+        {
+            steps
+            {
+            sh "mvn clean package"
+            }
+        }
+        stage('Run Docker compose')
+        {
+            steps
+            {
+            sh 'sudo docker-compose build'
+            sh 'sudo docker-compose up -d'
+            }
+        }
+        stage('Docker Push')
+        {
+            steps
+            {
+            withCredentials([string(credentialsId: 'dockerhub', variable: 'DHPWD')]) 
+            {
+            sh "docker login -u jayachandrababui -p ${DHPWD}"
+            }
+            sh 'sudo docker push jayachandrababui/job1_web2.0'
+            }
+        }
+    }
+}
